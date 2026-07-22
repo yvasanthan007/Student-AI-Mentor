@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArcElement,
   CategoryScale,
@@ -30,8 +31,7 @@ const navItems = [
   { label: "Courses", icon: "▤" },
   { label: "Assignments", icon: "▥" },
   { label: "Progress", icon: "▦" },
-  { label: "Calendar", icon: "◴" },
-  { label: "Analytics", icon: "◔" },
+
   { label: "Career Assistant", icon: "✦" },
   { label: "Settings", icon: "⚙" },
 ];
@@ -78,10 +78,25 @@ const defaultDashboard = {
 };
 
 function App() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [dashboard, setDashboard] = useState(defaultDashboard);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
+
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      return {};
+    }
+  }, []);
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login", { replace: true });
+  };
 
   const loadDashboard = async (search = "") => {
     setLoading(true);
@@ -159,7 +174,7 @@ function App() {
     ? dashboard.top_subjects
     : ["PDS", "ADS", "DAA"];
 
-  const displayName = dashboard.student?.name || "Vasanth";
+  const displayName = dashboard.student?.name || user.name || "Student";
   const firstName = displayName.split(" ")[0];
   const performanceLabel =
     dashboard.overview.average_score >= 85
@@ -187,15 +202,6 @@ function App() {
           </div>
         </div>
 
-        <div className="role-card">
-          <span className="role-label">CURRENT ROLE</span>
-          <div className="role-select">
-            <span className="role-icon">🎓</span>
-            <span>Student</span>
-            <span className="chevron">⌄</span>
-          </div>
-        </div>
-
         <nav className="side-nav">
           {navItems.map((item) => (
             <button
@@ -213,12 +219,11 @@ function App() {
               <div className="avatar">{firstName.charAt(0)}</div>
               <div>
             <div className="profile-name">{displayName}</div>
-            <div className="profile-meta">3rd Year CSE</div>
-            <div className="profile-meta">v@college.edu</div>
+            <div className="profile-meta">{user.username || "Student"}</div>
           </div>
         </div>
 
-        <button className="logout-btn" type="button">
+        <button className="logout-btn" type="button" onClick={logout}>
           ↪ Logout
         </button>
       </aside>
@@ -230,31 +235,15 @@ function App() {
             <p>{dashboard.right_rail.message}</p>
           </div>
 
-          <form className="searchbar" onSubmit={handleSearch}>
-            <span className="search-icon">⌕</span>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search anything..."
-              aria-label="Search by name or roll number"
-            />
-            <kbd>Ctrl K</kbd>
-          </form>
-
           <div className="top-icons">
             <div className="icon-btn badge">🔔<span>3</span></div>
             <div className="icon-btn">☼</div>
-            <div className="user-pill">
-              <div className="avatar small">V</div>
-              <span>Vasanth</span>
-            </div>
-            <div className="icon-btn">⌄</div>
           </div>
         </header>
 
         <section className="hero-card panel">
           <div className="hero-copy">
-            <h2>Check Your Performance</h2>
+
             <p>Enter your Roll No. or Name to get your personalized insights</p>
 
             <form className="hero-search" onSubmit={handleSearch}>
@@ -271,7 +260,7 @@ function App() {
               </button>
             </form>
 
-            <div className="example-line">Example: 24CY001 or ABHIRAJ KUMAR</div>
+
             {status ? <div className="status-line">{status}</div> : null}
           </div>
 

@@ -30,10 +30,10 @@ def load_students_from_excel():
             if roll_no and name:
                 students[roll_no] = name
         
-        print(f"✓ Loaded {len(students)} students from Excel")
+        print(f"[OK] Loaded {len(students)} students from Excel")
         return students
     except Exception as e:
-        print(f"✗ Error loading Excel file: {e}")
+        print(f"[ERROR] Error loading Excel file: {e}")
         return {}
 
 # Load students once on startup
