@@ -280,7 +280,6 @@ function App() {
           </div>
         </header>
 
-<<<<<<< HEAD
         <section className="hero-card panel">
           <div className="hero-copy">
             <p>Enter your Roll No. or Name to get your personalized insights</p>
@@ -303,8 +302,6 @@ function App() {
             {status ? <div className="status-line">{status}</div> : null}
           </div>
         </section>
-=======
->>>>>>> 377a748fcba75a186a39870e728afcd309779b28
 
         <section className="metrics-grid">
           <article className="metric panel">
