@@ -5,22 +5,29 @@ function UploadExcel() {
   const [file, setFile] = useState(null);
 
   const upload = async () => {
-    if (!file) return;
+    if (!file) {
+      alert("Please select an Excel file.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("file", file);
 
-    const response = await api.post("/upload", formData);
+    try {
+      const response = await api.post("/upload", formData);
 
-    console.log(response.data);
+      console.log(response.data);
 
-    alert("Upload Successful");
+      alert("Upload Successful!");
+    } catch (error) {
+      console.error(error);
+      alert("Upload Failed!");
+    }
   };
 
   return (
     <div>
-
-      <h2>Upload LMS Excel</h2>
+      <h2>📄 Upload LMS Excel</h2>
 
       <input
         type="file"
@@ -28,10 +35,10 @@ function UploadExcel() {
         onChange={(e) => setFile(e.target.files[0])}
       />
 
-      <button onClick={upload}>
-        Upload
-      </button>
+      <br />
+      <br />
 
+      <button onClick={upload}>Upload</button>
     </div>
   );
 }

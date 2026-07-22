@@ -1,46 +1,31 @@
+import "./App.css";
 import UploadExcel from "./components/UploadExcel";
-import { useEffect, useState } from "react";
-import api from "./services/api";
+import Analysis from "./components/Analysis";
 
 function App() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    api
-      .get("/dashboard")
-      .then((response) => {
-        setData(response.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
-
-  if (!data)
-    return <h1>Loading...</h1>;
-
   return (
-    <div style={{ padding: 40 }}>
-      <h1>MentorAI Dashboard</h1>
+    <div
+      style={{
+        maxWidth: "800px",
+        margin: "40px auto",
+        padding: "20px",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <h1>🎓 MentorAI Dashboard</h1>
 
-      {/* Upload UI */}
+      <p>
+        AI Student Mentor for LMS Performance Analysis and Personalized Study
+        Planning.
+      </p>
+
+      <hr />
+
       <UploadExcel />
 
       <hr />
 
-      <h2>{data.student}</h2>
-
-      <p>CGPA : {data.cgpa}</p>
-
-      <p>Attendance : {data.attendance}%</p>
-
-      <p>Weak Subject : {data.weak_subject}</p>
-
-      <p>Strong Subject : {data.strong_subject}</p>
-
-      <p>
-        Tasks Completed : {data.completed}/{data.tasks}
-      </p>
+      <Analysis />
     </div>
   );
 }
