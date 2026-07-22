@@ -1,24 +1,14 @@
-from fastapi import APIRouter, UploadFile, File
-import pandas as pd
-import os
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException, UploadFile
 
 router = APIRouter()
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload")
-async def upload_excel(file: UploadFile = File(...)):
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
+async def upload_excel(file: UploadFile):
+    raise HTTPException(
+        status_code=410,
+        detail="Upload is disabled in this build. Search by roll number or name instead.",
+    )
 
-    with open(file_path, "wb") as buffer:
-        buffer.write(await file.read())
-
-    df = pd.read_excel(file_path)
-
-    return {
-        "filename": file.filename,
-        "rows": len(df),
-        "columns": list(df.columns),
-        "data": df.head(5).to_dict(orient="records")
-    }
