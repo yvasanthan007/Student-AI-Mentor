@@ -96,11 +96,15 @@ def run_command(command: list[str], cwd: Path, env: dict[str, str] | None = None
 def build_frontend() -> None:
     node_path = find_node_path()
     npm_cli = npm_cli_path(node_path)
+    node_dir = str(Path(node_path).parent)
+
+    env = os.environ.copy()
+    env["PATH"] = node_dir + os.pathsep + env.get("PATH", "")
 
     if not (FRONTEND_DIR / "node_modules").exists():
-        run_command([node_path, str(npm_cli), "install"], cwd=FRONTEND_DIR)
+        run_command([node_path, str(npm_cli), "install"], cwd=FRONTEND_DIR, env=env)
 
-    run_command([node_path, str(npm_cli), "run", "build"], cwd=FRONTEND_DIR)
+    run_command([node_path, str(npm_cli), "run", "build"], cwd=FRONTEND_DIR, env=env)
 
 
 def launch_backend(port: int) -> subprocess.Popen[str]:
