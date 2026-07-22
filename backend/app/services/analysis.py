@@ -2,16 +2,15 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from pathlib import Path
 from statistics import mean
 from typing import Any
-
-from ai.gemini import ask_gemini
 
 
 def _to_float(value: Any, default: float = 0.0) -> float:
     try:
-        if value is None or value == "":
+        if value is None:
+            return default
+        if isinstance(value, str) and not value.strip():
             return default
         return float(value)
     except (TypeError, ValueError):
@@ -26,20 +25,26 @@ def _first_present(row: dict[str, Any], keys: list[str], default: str = "") -> s
     return default
 
 
-def _derive_summary(records: list[dict[str, Any]], student_name: str | None = None) -> dict[str, Any]:
-    normalized = []
+def normalize_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    normalized: list[dict[str, Any]] = []
     for row in records:
+        subject = _first_present(row, ["subject", "Subject", "course", "Course", "module", "Module"], "Unknown")
+        student = _first_present(row, ["student_name", "Student", "student", "name", "Name"], "Unknown Student")
         normalized.append(
             {
-                "student_name": _first_present(row, ["student_name", "Student", "student", "name", "Name"], "Unknown Student"),
-                "subject": _first_present(row, ["subject", "Subject", "course", "Course"], "Unknown"),
-                "test1": _to_float(row.get("Test1", row.get("test1"))),
-                "test2": _to_float(row.get("Test2", row.get("test2"))),
-                "assignment": _to_float(row.get("Assignment", row.get("assignment"))),
-                "attendance": _to_float(row.get("Attendance", row.get("attendance"))),
+                "student_name": student,
+                "subject": subject,
+                "test1": _to_float(row.get("Test1", row.get("test1", row.get("quiz1", row.get("Quiz1"))))),
+                "test2": _to_float(row.get("Test2", row.get("test2", row.get("quiz2", row.get("Quiz2"))))),
+                "assignment": _to_float(row.get("Assignment", row.get("assignment", row.get("lab", row.get("Lab"))))),
+                "attendance": _to_float(row.get("Attendance", row.get("attendance", row.get("present", row.get("Present")))), 0.0),
             }
         )
+    return normalized
 
+
+def derive_summary(records: list[dict[str, Any]], student_name: str | None = None) -> dict[str, Any]:
+    normalized = normalize_records(records)
     if not normalized:
         return {
             "student_name": student_name or "Unknown Student",
@@ -71,6 +76,7 @@ def _derive_summary(records: list[dict[str, Any]], student_name: str | None = No
 
     overall_average = round(mean([item["score"] for item in subject_scores]), 2)
     attendance_average = round(mean(attendance_values), 2)
+
     strength_subjects = [item["subject"] for item in subject_scores if item["score"] >= 80]
     weak_subjects = [item["subject"] for item in subject_scores if item["score"] < 70]
     study_focus = weak_subjects[:3] or [subject_scores[-1]["subject"]]
@@ -83,8 +89,24 @@ def _derive_summary(records: list[dict[str, Any]], student_name: str | None = No
         risk_level = "High"
 
     student = student_name or max(set(student_values), key=student_values.count)
-    daily_plan = [f"Revise {subject} for 45 minutes using active recall." for subject in study_focus]
-    daily_plan.append("Finish one timed practice set and review every mistake.")
+
+    daily_plan = [
+        f"Spend 45 minutes revising {subject} using active recall and short notes."
+        for subject in study_focus
+    ]
+    daily_plan.append("Finish one timed practice set and review every mistake immediately.")
+
+    weekly_goal = [
+        "Raise the weakest subject by at least 8 to 10 marks.",
+        "Complete one full revision cycle before the next LMS deadline.",
+        "Keep attendance above 90 percent for the next seven days.",
+    ]
+
+    career_guidance = [
+        "Lean into subjects with the highest scores when choosing electives and projects.",
+        "Build a small portfolio project that demonstrates your strongest technical skill.",
+        "If your scores are mixed, prioritize internships that reward consistency and problem solving.",
+    ]
 
     return {
         "student_name": student,
@@ -96,40 +118,20 @@ def _derive_summary(records: list[dict[str, Any]], student_name: str | None = No
         "subject_scores": subject_scores,
         "study_focus": study_focus,
         "daily_plan": daily_plan,
-        "weekly_goal": [
-            "Increase the weakest subject score by 8 to 10 marks.",
-            "Complete one full revision cycle before the next LMS deadline.",
-            "Maintain attendance above 90 percent for the week.",
-        ],
-        "career_guidance": [
-            "Build a portfolio project around your strongest subject.",
-            "Use your top-performing subjects to guide electives and internships.",
-            "If scores are mixed, prioritize consistency and problem-solving roles.",
-        ],
+        "weekly_goal": weekly_goal,
+        "career_guidance": career_guidance,
     }
 
 
-def load_prompt() -> str:
-    prompt_path = Path(__file__).resolve().parent.parent / "prompts" / "performance_prompt.txt"
-    return prompt_path.read_text(encoding="utf-8")
-
-
-def analyze_student(records: list[dict[str, Any]], student_name: str | None = None) -> dict[str, Any]:
-    summary = _derive_summary(records, student_name=student_name)
-    prompt = load_prompt() + "\n\n" + json.dumps(summary, indent=2)
-
-    try:
-        ai_text = ask_gemini(prompt, model="gemini-2.5-flash")
-        source = "gemini"
-    except Exception:
-        ai_text = "\n".join(
-            [
-                f"MentorAI Performance Analysis for {summary['student_name']}",
-                f"Overall average: {summary['overall_average']}%",
-                f"Attendance average: {summary['attendance_average']}%",
-                f"Risk level: {summary['risk_level']}",
-            ]
+def progress_series_from_uploads(upload_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    series = []
+    for index, row in enumerate(upload_rows, start=1):
+        summary = json.loads(row["summary_json"])
+        series.append(
+            {
+                "label": f"Upload {index}",
+                "average": summary.get("overall_average", 0),
+                "attendance": summary.get("attendance_average", 0),
+            }
         )
-        source = "local"
-
-    return {"summary": summary, "analysis": ai_text, "source": source}
+    return series
