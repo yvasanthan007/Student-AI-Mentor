@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArcElement,
   CategoryScale,
@@ -12,8 +11,7 @@ import {
 } from "chart.js";
 import { Doughnut, Line } from "react-chartjs-2";
 import api from "./services/api";
-import Login from "./components/Login";
-import Register from "./components/Register";
+
 import UploadExcel from "./components/UploadExcel";
 import Analysis from "./components/Analysis";
 import "./App.css";
@@ -80,36 +78,7 @@ const defaultDashboard = {
   bottom_subjects: [],
 };
 
-function useAuth() {
-  const [user, setUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
-
-  const login = useCallback((userData, accessToken) => {
-    localStorage.setItem("token", accessToken);
-    localStorage.setItem("user", JSON.stringify(userData));
-    setToken(accessToken);
-    setUser(userData);
-  }, []);
-
-  const logout = useCallback(() => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setToken(null);
-    setUser(null);
-  }, []);
-
-  return { user, token, login, logout, isAuthenticated: !!token };
-}
-
-function DashboardPage({ user, onLogout }) {
+function App({ user, onLogout }) {
   const [query, setQuery] = useState(user?.username || "");
   const [dashboard, setDashboard] = useState(defaultDashboard);
   const [loading, setLoading] = useState(false);
@@ -137,15 +106,8 @@ function DashboardPage({ user, onLogout }) {
   };
 
   useEffect(() => {
-    if (user?.username) {
-      setQuery(user.username);
-      const timer = window.setTimeout(() => {
-        void loadDashboard(user.username);
-      }, 0);
-      return () => window.clearTimeout(timer);
-    }
     const timer = window.setTimeout(() => {
-      void loadDashboard();
+      void loadDashboard(user?.username || "");
     }, 0);
     return () => window.clearTimeout(timer);
   }, [user?.username]);
@@ -248,9 +210,8 @@ function DashboardPage({ user, onLogout }) {
           <div className="avatar">{firstName.charAt(0)}</div>
           <div>
             <div className="profile-name">{displayName}</div>
-            <div className="profile-meta">
-              {user?.username || ""}
-            </div>
+            <div className="profile-meta">3rd Year CSE</div>
+            <div className="profile-meta">v@college.edu</div>
           </div>
         </div>
 
@@ -601,64 +562,6 @@ function DashboardPage({ user, onLogout }) {
         </section>
       </main>
     </div>
-  );
-}
-
-function App() {
-  const auth = useAuth();
-  const navigate = useNavigate();
-
-  const handleLoginSuccess = (userData) => {
-    const token = localStorage.getItem("token");
-    auth.login(userData, token);
-    navigate("/");
-  };
-
-  const handleLogout = () => {
-    auth.logout();
-    navigate("/login");
-  };
-
-  return (
-    <Routes>
-      <Route
-        path="/login"
-        element={
-          auth.isAuthenticated ? (
-            <Navigate to="/" replace />
-          ) : (
-            <Login
-              onLoginSuccess={handleLoginSuccess}
-              onSwitchToRegister={() => navigate("/register")}
-            />
-          )
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          auth.isAuthenticated ? (
-            <Navigate to="/" replace />
-          ) : (
-            <Register
-              onRegisterSuccess={handleLoginSuccess}
-              onSwitchToLogin={() => navigate("/login")}
-            />
-          )
-        }
-      />
-      <Route
-        path="/"
-        element={
-          auth.isAuthenticated ? (
-            <DashboardPage user={auth.user} onLogout={handleLogout} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
   );
 }
 

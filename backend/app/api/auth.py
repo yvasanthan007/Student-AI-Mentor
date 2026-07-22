@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from passlib.context import CryptContext
+import bcrypt
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -14,8 +14,6 @@ from app.models import User
 from app.schemas import LoginRequest, RegisterRequest
 
 router = APIRouter()
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
 EXCEL_FILE = ROOT_DIR / "sample_data" / "CYBER_Students_Combined.xlsx"
@@ -51,7 +49,7 @@ def get_user_by_roll(db: Session, roll_number: str) -> User | None:
 
 
 def create_user(db: Session, roll_number: str, name: str, password: str) -> User:
-    hashed = pwd_context.hash(password)
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     user = User(roll_number=roll_number, name=name, hashed_password=hashed)
     db.add(user)
     db.commit()
@@ -60,7 +58,7 @@ def create_user(db: Session, roll_number: str, name: str, password: str) -> User
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
 
 def authenticate_user(db: Session, roll_number: str, password: str) -> User | None:
