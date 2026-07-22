@@ -182,16 +182,16 @@
 }
 
 .workspace {
-  padding: 24px 22px 28px;
+  padding: 20px 18px 22px;
   min-width: 0;
 }
 
 .topbar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 520px) auto;
   align-items: center;
   gap: 18px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .topbar h1 {
@@ -275,9 +275,9 @@
 .hero-card {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-  gap: 40px;
-  padding: 32px 36px;
-  margin-bottom: 20px;
+  gap: 20px;
+  padding: 22px;
+  margin-bottom: 18px;
   border-radius: 20px;
 }
 
@@ -300,8 +300,8 @@
 .hero-search {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-top: 28px;
+  gap: 12px;
+  margin-top: 22px;
 }
 
 .hero-search-input {
@@ -312,7 +312,7 @@
   background: rgba(5, 10, 24, 0.88);
   border: 1px solid rgba(148, 163, 184, 0.16);
   border-radius: 16px;
-  padding: 16px 18px;
+  padding: 14px 16px;
 }
 
 .primary-btn,
@@ -353,8 +353,9 @@
   opacity: 0.65;
 }
 
+.example-line,
 .status-line {
-  margin-top: 14px;
+  margin-top: 12px;
   font-size: 0.92rem;
 }
 
@@ -428,12 +429,12 @@
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 14px;
+  margin-bottom: 16px;
 }
 
 .metric {
-  padding: 20px;
+  padding: 16px;
 }
 
 .metric-head {
@@ -441,7 +442,7 @@
   align-items: center;
   gap: 10px;
   color: #f8fafc;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .metric-icon {
@@ -525,7 +526,7 @@
 .content-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 330px;
-  gap: 18px;
+  gap: 14px;
   align-items: start;
 }
 
@@ -535,7 +536,7 @@
 }
 
 .panel {
-  padding: 20px;
+  padding: 16px;
 }
 
 .subject-panel,
@@ -543,7 +544,7 @@
 .insight-panel,
 .focus-panel,
 .recommend-panel {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .panel-head {
@@ -551,7 +552,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .subject-list {
@@ -626,7 +627,7 @@
 .bottom-grid {
   display: grid;
   grid-template-columns: 1.1fr 1fr 1fr;
-  gap: 18px;
+  gap: 14px;
 }
 
 .insight-panel p {
