@@ -5,8 +5,14 @@ from pydantic import BaseModel, Field
 
 
 class LoginRequest(BaseModel):
-    email: str | None = None
-    password: str = Field(min_length=3)
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
+
+
+class RegisterRequest(BaseModel):
+    register_number: str = Field(min_length=1)
+    password: str = Field(min_length=4)
+    confirm_password: str = Field(min_length=4)
 
 
 class LoginResponse(BaseModel):
@@ -47,3 +53,4 @@ class MentorResponse(BaseModel):
     content: str
     bullets: list[str]
     source: str
+
