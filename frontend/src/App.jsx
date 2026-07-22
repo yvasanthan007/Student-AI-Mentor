@@ -11,6 +11,8 @@ import {
 } from "chart.js";
 import { Doughnut, Line } from "react-chartjs-2";
 import api from "./services/api";
+import Login from "./components/Login";
+import Register from "./components/Register";
 import "./App.css";
 
 ChartJS.register(
@@ -30,8 +32,6 @@ const navItems = [
   { label: "Courses", icon: "▤" },
   { label: "Assignments", icon: "▥" },
   { label: "Progress", icon: "▦" },
-  { label: "Calendar", icon: "◴" },
-  { label: "Analytics", icon: "◔" },
   { label: "Career Assistant", icon: "✦" },
   { label: "Settings", icon: "⚙" },
 ];
@@ -78,10 +78,41 @@ const defaultDashboard = {
 };
 
 function App() {
+  const [authMode, setAuthMode] = useState("login"); // 'login', 'register'
+  const [user, setUser] = useState(null);
   const [query, setQuery] = useState("");
   const [dashboard, setDashboard] = useState(defaultDashboard);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      }
+    }
+  }, []);
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    setAuthMode("login");
+  };
+
+  const handleRegisterSuccess = (userData) => {
+    setUser(userData);
+    setAuthMode("login");
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+  };
 
   const loadDashboard = async (search = "") => {
     setLoading(true);
@@ -103,18 +134,40 @@ function App() {
   };
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadDashboard();
-    }, 0);
+    if (user) {
+      const timer = window.setTimeout(() => {
+        void loadDashboard();
+      }, 0);
 
-    return () => window.clearTimeout(timer);
-  }, []);
+      return () => window.clearTimeout(timer);
+    }
+  }, [user]);
 
   const handleSearch = async (event) => {
     event.preventDefault();
     await loadDashboard(query.trim());
   };
 
+  // Show login/register if not authenticated
+  if (!user) {
+    if (authMode === "login") {
+      return (
+        <Login
+          onLoginSuccess={handleLoginSuccess}
+          onSwitchToRegister={() => setAuthMode("register")}
+        />
+      );
+    } else {
+      return (
+        <Register
+          onRegisterSuccess={handleRegisterSuccess}
+          onSwitchToLogin={() => setAuthMode("login")}
+        />
+      );
+    }
+  }
+
+  // Dashboard content
   const trendChartData = useMemo(
     () => ({
       labels: dashboard.performance_trend.map((item) => item.label),
@@ -159,7 +212,7 @@ function App() {
     ? dashboard.top_subjects
     : ["PDS", "ADS", "DAA"];
 
-  const displayName = dashboard.student?.name || "Vasanth";
+  const displayName = user?.name || "Student";
   const firstName = displayName.split(" ")[0];
   const performanceLabel =
     dashboard.overview.average_score >= 85
@@ -187,15 +240,6 @@ function App() {
           </div>
         </div>
 
-        <div className="role-card">
-          <span className="role-label">CURRENT ROLE</span>
-          <div className="role-select">
-            <span className="role-icon">🎓</span>
-            <span>Student</span>
-            <span className="chevron">⌄</span>
-          </div>
-        </div>
-
         <nav className="side-nav">
           {navItems.map((item) => (
             <button
@@ -213,82 +257,29 @@ function App() {
               <div className="avatar">{firstName.charAt(0)}</div>
               <div>
             <div className="profile-name">{displayName}</div>
-            <div className="profile-meta">3rd Year CSE</div>
-            <div className="profile-meta">v@college.edu</div>
+            <div className="profile-meta">{user?.username || "Student"}</div>
           </div>
         </div>
 
-        <button className="logout-btn" type="button">
-          ↪ Logout
+        <button className="logout-btn" type="button" onClick={handleLogout}>
+          ↪ Logout ({firstName})
         </button>
       </aside>
 
       <main className="workspace">
         <header className="topbar">
           <div>
-            <h1>{dashboard.right_rail.greeting.replace("Vasanth", firstName)}</h1>
-            <p>{dashboard.right_rail.message}</p>
+            <h1>Hello, {firstName}! 👋</h1>
+            <p>Welcome back to your dashboard</p>
           </div>
-
-          <form className="searchbar" onSubmit={handleSearch}>
-            <span className="search-icon">⌕</span>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search anything..."
-              aria-label="Search by name or roll number"
-            />
-            <kbd>Ctrl K</kbd>
-          </form>
 
           <div className="top-icons">
             <div className="icon-btn badge">🔔<span>3</span></div>
             <div className="icon-btn">☼</div>
-            <div className="user-pill">
-              <div className="avatar small">V</div>
-              <span>Vasanth</span>
-            </div>
             <div className="icon-btn">⌄</div>
           </div>
         </header>
 
-        <section className="hero-card panel">
-          <div className="hero-copy">
-            <h2>Check Your Performance</h2>
-            <p>Enter your Roll No. or Name to get your personalized insights</p>
-
-            <form className="hero-search" onSubmit={handleSearch}>
-              <div className="hero-search-input">
-                <span>⌕</span>
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Enter Roll No. or Name"
-                />
-              </div>
-              <button className="primary-btn" type="submit" disabled={loading}>
-                {loading ? "Analyzing..." : "Analyze"}
-              </button>
-            </form>
-
-            <div className="example-line">Example: 24CY001 or ABHIRAJ KUMAR</div>
-            {status ? <div className="status-line">{status}</div> : null}
-          </div>
-
-          <div className="hero-art" aria-hidden="true">
-            <div className="art-card">
-              <div className="art-dots">
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="art-line line-one" />
-              <div className="art-line line-two" />
-              <div className="art-line line-three" />
-              <div className="art-ring" />
-            </div>
-          </div>
-        </section>
 
         <section className="metrics-grid">
           <article className="metric panel">
