@@ -30,8 +30,6 @@ const navItems = [
   { label: "Courses", icon: "▤" },
   { label: "Assignments", icon: "▥" },
   { label: "Progress", icon: "▦" },
-  { label: "Calendar", icon: "◴" },
-  { label: "Analytics", icon: "◔" },
   { label: "Career Assistant", icon: "✦" },
   { label: "Settings", icon: "⚙" },
 ];
@@ -187,15 +185,6 @@ function App() {
           </div>
         </div>
 
-        <div className="role-card">
-          <span className="role-label">CURRENT ROLE</span>
-          <div className="role-select">
-            <span className="role-icon">🎓</span>
-            <span>Student</span>
-            <span className="chevron">⌄</span>
-          </div>
-        </div>
-
         <nav className="side-nav">
           {navItems.map((item) => (
             <button
@@ -230,31 +219,15 @@ function App() {
             <p>{dashboard.right_rail.message}</p>
           </div>
 
-          <form className="searchbar" onSubmit={handleSearch}>
-            <span className="search-icon">⌕</span>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search anything..."
-              aria-label="Search by name or roll number"
-            />
-            <kbd>Ctrl K</kbd>
-          </form>
-
           <div className="top-icons">
             <div className="icon-btn badge">🔔<span>3</span></div>
             <div className="icon-btn">☼</div>
-            <div className="user-pill">
-              <div className="avatar small">V</div>
-              <span>Vasanth</span>
-            </div>
             <div className="icon-btn">⌄</div>
           </div>
         </header>
 
         <section className="hero-card panel">
           <div className="hero-copy">
-            <h2>Check Your Performance</h2>
             <p>Enter your Roll No. or Name to get your personalized insights</p>
 
             <form className="hero-search" onSubmit={handleSearch}>
@@ -273,20 +246,6 @@ function App() {
 
             <div className="example-line">Example: 24CY001 or ABHIRAJ KUMAR</div>
             {status ? <div className="status-line">{status}</div> : null}
-          </div>
-
-          <div className="hero-art" aria-hidden="true">
-            <div className="art-card">
-              <div className="art-dots">
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="art-line line-one" />
-              <div className="art-line line-two" />
-              <div className="art-line line-three" />
-              <div className="art-ring" />
-            </div>
           </div>
         </section>
 
