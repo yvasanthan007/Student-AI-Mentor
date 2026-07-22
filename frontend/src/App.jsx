@@ -1,53 +1,48 @@
-import { useState } from "react";
+import UploadExcel from "./components/UploadExcel";
+import { useEffect, useState } from "react";
+import api from "./services/api";
 
 function App() {
+  const [data, setData] = useState(null);
 
-  const [student] = useState({
+  useEffect(() => {
+    api
+      .get("/dashboard")
+      .then((response) => {
+        setData(response.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
 
-    student: "John Doe",
-
-    cgpa: 8.2,
-
-    attendance: 92,
-
-    weak_subject: "Mathematics",
-
-    strong_subject: "Python",
-
-    tasks: 5,
-
-    completed: 2
-
-  });
+  if (!data)
+    return <h1>Loading...</h1>;
 
   return (
-
-    <div style={{padding:"40px"}}>
-
+    <div style={{ padding: 40 }}>
       <h1>MentorAI Dashboard</h1>
 
-      <hr/>
+      {/* Upload UI */}
+      <UploadExcel />
 
-      <h2>{student.student}</h2>
+      <hr />
 
-      <p>CGPA : {student.cgpa}</p>
+      <h2>{data.student}</h2>
 
-      <p>Attendance : {student.attendance}%</p>
+      <p>CGPA : {data.cgpa}</p>
 
-      <p>Strong Subject : {student.strong_subject}</p>
+      <p>Attendance : {data.attendance}%</p>
 
-      <p>Weak Subject : {student.weak_subject}</p>
+      <p>Weak Subject : {data.weak_subject}</p>
+
+      <p>Strong Subject : {data.strong_subject}</p>
 
       <p>
-
-        Tasks Completed : {student.completed}/{student.tasks}
-
+        Tasks Completed : {data.completed}/{data.tasks}
       </p>
-
     </div>
-
   );
-
 }
 
 export default App;
