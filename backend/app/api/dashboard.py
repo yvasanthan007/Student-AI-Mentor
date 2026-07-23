@@ -1,24 +1,17 @@
-from fastapi import APIRouter
+from __future__ import annotations
+
+from fastapi import APIRouter, Query
+
+from app.services.lms import build_dashboard
 
 router = APIRouter()
 
+
 @router.get("/dashboard")
-def get_dashboard():
+def get_dashboard(query: str | None = Query(default=None)):
+    return build_dashboard(query)
 
-    return {
 
-        "student":"John Doe",
-
-        "cgpa":8.2,
-
-        "attendance":92,
-
-        "weak_subject":"Mathematics",
-
-        "strong_subject":"Python",
-
-        "tasks":5,
-
-        "completed":2
-
-    }
+@router.get("/student/search")
+def search_student(query: str | None = Query(default=None)):
+    return build_dashboard(query)
