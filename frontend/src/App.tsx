@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import {
   ArcElement,
   CategoryScale,
@@ -9,13 +9,13 @@ import {
   LinearScale,
   PointElement,
   Tooltip,
-} from "chart.js";
-import { Doughnut, Line } from "react-chartjs-2";
-import api from "./services/api";
-
-import UploadExcel from "./components/UploadExcel";
-import Analysis from "./components/Analysis";
-import "./App.css";
+} from 'chart.js'
+import { Doughnut, Line } from 'react-chartjs-2'
+import api from './services/api'
+import Login from './components/Login'
+import Register from './components/Register'
+import UploadExcel from './components/UploadExcel'
+import Analysis from './components/Analysis'
 
 ChartJS.register(
   CategoryScale,
@@ -24,33 +24,29 @@ ChartJS.register(
   LineElement,
   ArcElement,
   Tooltip,
-  Legend,
-);
+  Legend
+)
 
 const navItems = [
-  { label: "Dashboard", icon: "⌂", active: true },
-  { label: "AI Chat", icon: "◌" },
-  { label: "Study Planner", icon: "▣" },
-  { label: "Courses", icon: "▤" },
-  { label: "Assignments", icon: "▥" },
-  { label: "Progress", icon: "▦" },
-<<<<<<< HEAD
-
-=======
->>>>>>> f8ba98404503cf63ed5e8a07a29a533bfa02f661
-  { label: "Career Assistant", icon: "✦" },
-  { label: "Settings", icon: "⚙" },
-];
+  { label: 'Dashboard', icon: '⌂', active: true },
+  { label: 'AI Chat', icon: '◌' },
+  { label: 'Study Planner', icon: '▣' },
+  { label: 'Courses', icon: '▤' },
+  { label: 'Assignments', icon: '▥' },
+  { label: 'Progress', icon: '▦' },
+  { label: 'Career Assistant', icon: '✦' },
+  { label: 'Settings', icon: '⚙' },
+]
 
 const defaultDashboard = {
   found: false,
   student: null,
   overview: {
-    greeting_name: "Student",
+    greeting_name: 'Student',
     average_score: 0,
     class_percentile: 0,
     rank_in_class: 0,
-    rank_label: "Top 0%",
+    rank_label: 'Top 0%',
     ai_readiness: 0,
     study_streak: 0,
     class_average: 0,
@@ -71,145 +67,157 @@ const defaultDashboard = {
   class_summary: {
     total_students: 0,
     average_class_score: 0,
-    top_subject: "",
-    weak_subject: "",
+    top_subject: '',
+    weak_subject: '',
   },
-  ai_insight: "Search by roll number or name to load a student dashboard.",
+  ai_insight: 'Search by roll number or name to load a student dashboard.',
   right_rail: {
-    greeting: "AI Mentor",
-    message: "Search by roll number or name to load a student dashboard.",
+    greeting: 'AI Mentor',
+    message: 'Search by roll number or name to load a student dashboard.',
   },
   top_subjects: [],
   bottom_subjects: [],
-};
+}
 
-<<<<<<< HEAD
-function App() {
-  const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-=======
-function App({ user, onLogout }) {
-  const [query, setQuery] = useState(user?.username || "");
->>>>>>> f8ba98404503cf63ed5e8a07a29a533bfa02f661
-  const [dashboard, setDashboard] = useState(defaultDashboard);
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("");
-  const [latestUpload, setLatestUpload] = useState(null);
-  const [showUpload, setShowUpload] = useState(false);
-
-  const user = useMemo(() => {
+function useAuth() {
+  const [user, setUser] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("user") || "{}");
+      const stored = localStorage.getItem('user')
+      return stored ? JSON.parse(stored) : null
     } catch {
-      return {};
+      return null
     }
-  }, []);
+  })
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login", { replace: true });
-  };
+  const [token, setToken] = useState(() => localStorage.getItem('token'))
 
-  const loadDashboard = async (search = "") => {
-    setLoading(true);
-    setStatus("");
+  const login = useCallback((userData: any, accessToken: string) => {
+    localStorage.setItem('token', accessToken)
+    localStorage.setItem('user', JSON.stringify(userData))
+    setToken(accessToken)
+    setUser(userData)
+  }, [])
+
+  const logout = useCallback(() => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setToken(null)
+    setUser(null)
+  }, [])
+
+  return { user, token, login, logout, isAuthenticated: !!token }
+}
+
+function DashboardPage({ user, onLogout }: { user: any; onLogout: () => void }) {
+  const [query, setQuery] = useState(user?.username || '')
+  const [dashboard, setDashboard] = useState(defaultDashboard)
+  const [loading, setLoading] = useState(false)
+  const [status, setStatus] = useState('')
+  const [latestUpload, setLatestUpload] = useState<any>(null)
+  const [showUpload, setShowUpload] = useState(false)
+
+  const loadDashboard = async (search = '') => {
+    setLoading(true)
+    setStatus('')
     try {
-      const response = await api.get("/dashboard", {
+      const response = await api.get('/dashboard', {
         params: search ? { query: search } : undefined,
-      });
-      setDashboard(response.data);
+      })
+      setDashboard(response.data)
       if (!response.data.found) {
-        setStatus(response.data.message || "No match found.");
+        setStatus(response.data.message || 'No match found.')
       }
     } catch (error) {
-      setDashboard(defaultDashboard);
-      setStatus(error?.response?.data?.detail || "Unable to load dashboard.");
+      setDashboard(defaultDashboard)
+      setStatus((error as any)?.response?.data?.detail || 'Unable to load dashboard.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadDashboard(user?.username || "");
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [user?.username]);
-
-  const handleSearch = async (event) => {
-    event.preventDefault();
-    await loadDashboard(query.trim());
-  };
-
-  const handleUploaded = (data) => {
-    setLatestUpload(data);
-    setShowUpload(false);
-    if (data.student_name && data.student_name !== "Unknown") {
-      setQuery(data.student_name);
-      loadDashboard(data.student_name);
+    if (user?.username) {
+      setQuery(user.username)
+      const timer = window.setTimeout(() => {
+        void loadDashboard(user.username)
+      }, 0)
+      return () => window.clearTimeout(timer)
     }
-  };
+    const timer = window.setTimeout(() => {
+      void loadDashboard()
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [user?.username])
+
+  const handleSearch = async (event: React.FormEvent) => {
+    event.preventDefault()
+    await loadDashboard(query.trim())
+  }
+
+  const handleUploaded = (data: any) => {
+    setLatestUpload(data)
+    setShowUpload(false)
+    if (data.student_name && data.student_name !== 'Unknown') {
+      setQuery(data.student_name)
+      loadDashboard(data.student_name)
+    }
+  }
 
   const trendChartData = useMemo(
     () => ({
-      labels: dashboard.performance_trend.map((item) => item.label),
+      labels: dashboard.performance_trend.map((item: any) => item.label),
       datasets: [
         {
-          label: "Performance trend",
-          data: dashboard.performance_trend.map((item) => item.value),
-          borderColor: "#8b5cf6",
-          backgroundColor: "rgba(139, 92, 246, 0.25)",
-          pointBackgroundColor: "#f8fafc",
-          pointBorderColor: "#8b5cf6",
+          label: 'Performance trend',
+          data: dashboard.performance_trend.map((item: any) => item.value),
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.25)',
+          pointBackgroundColor: '#f8fafc',
+          pointBorderColor: '#8b5cf6',
           tension: 0.35,
           fill: true,
         },
       ],
     }),
-    [dashboard.performance_trend],
-  );
+    [dashboard.performance_trend]
+  )
 
   const overallChartData = useMemo(() => {
-    const score = dashboard.overview.average_score || 0;
+    const score = dashboard.overview.average_score || 0
     return {
-      labels: ["Performance", "Remaining"],
+      labels: ['Performance', 'Remaining'],
       datasets: [
         {
           data: [score, Math.max(0, 100 - score)],
-          backgroundColor: ["#8b5cf6", "#1f2937"],
+          backgroundColor: ['#8b5cf6', '#1f2937'],
           borderWidth: 0,
         },
       ],
-    };
-  }, [dashboard.overview.average_score]);
+    }
+  }, [dashboard.overview.average_score])
 
-  const quickActions = ["Study Planner", "AI Chat", "Ask Doubt", "Career Guide"];
+  const quickActions = ['Study Planner', 'AI Chat', 'Ask Doubt', 'Career Guide']
 
   const subjectBadges = dashboard.top_subjects.length
     ? dashboard.top_subjects
-    : ["PDS", "ADS", "DAA"];
+    : ['PDS', 'ADS', 'DAA']
 
-<<<<<<< HEAD
-  const displayName = dashboard.student?.name || user.name || "Student";
-=======
-  const displayName = dashboard.student?.name || user?.name || "Student";
->>>>>>> f8ba98404503cf63ed5e8a07a29a533bfa02f661
-  const firstName = displayName.split(" ")[0];
+  const displayName = dashboard.student?.name || user?.name || 'Student'
+  const firstName = displayName.split(' ')[0]
   const performanceLabel =
     dashboard.overview.average_score >= 85
-      ? "Excellent"
+      ? 'Excellent'
       : dashboard.overview.average_score >= 70
-        ? "Very Good"
+        ? 'Very Good'
         : dashboard.overview.average_score >= 55
-          ? "Good"
-          : "Needs Attention";
+          ? 'Good'
+          : 'Needs Attention'
   const readinessLabel =
     dashboard.overview.ai_readiness >= 80
-      ? "Excellent"
+      ? 'Excellent'
       : dashboard.overview.ai_readiness >= 65
-        ? "Good"
-        : "Improve";
+        ? 'Good'
+        : 'Improve'
 
   return (
     <div className="app-shell">
@@ -226,7 +234,7 @@ function App({ user, onLogout }) {
           {navItems.map((item) => (
             <button
               key={item.label}
-              className={`nav-item ${item.active ? "active" : ""}`}
+              className={`nav-item ${item.active ? 'active' : ''}`}
               type="button"
             >
               <span className="nav-icon">{item.icon}</span>
@@ -239,15 +247,11 @@ function App({ user, onLogout }) {
           <div className="avatar">{firstName.charAt(0)}</div>
           <div>
             <div className="profile-name">{displayName}</div>
-            <div className="profile-meta">{user.username || "Student"}</div>
+            <div className="profile-meta">{user?.username || ''}</div>
           </div>
         </div>
 
-<<<<<<< HEAD
-        <button className="logout-btn" type="button" onClick={logout}>
-=======
         <button className="logout-btn" type="button" onClick={onLogout}>
->>>>>>> f8ba98404503cf63ed5e8a07a29a533bfa02f661
           ↪ Logout
         </button>
       </aside>
@@ -260,25 +264,16 @@ function App({ user, onLogout }) {
           </div>
 
           <div className="top-icons">
-<<<<<<< HEAD
-            <div className="icon-btn badge">🔔<span>3</span></div>
-            <div className="icon-btn">☼</div>
-=======
             <div className="icon-btn badge">
               🔔<span>3</span>
             </div>
             <div className="icon-btn">☼</div>
             <div className="icon-btn">⌄</div>
->>>>>>> f8ba98404503cf63ed5e8a07a29a533bfa02f661
           </div>
         </header>
 
         <section className="hero-card panel">
           <div className="hero-copy">
-<<<<<<< HEAD
-
-=======
->>>>>>> f8ba98404503cf63ed5e8a07a29a533bfa02f661
             <p>Enter your Roll No. or Name to get your personalized insights</p>
 
             <form className="hero-search" onSubmit={handleSearch}>
@@ -290,27 +285,27 @@ function App({ user, onLogout }) {
                   placeholder="Enter Roll No. or Name"
                 />
               </div>
-              <button className="primary-btn" type="submit" disabled={loading}>
-                {loading ? "Analyzing..." : "Analyze"}
+              <button
+                className="primary-btn"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? 'Analyzing...' : 'Analyze'}
               </button>
             </form>
 
-<<<<<<< HEAD
-
-=======
             <div className="example-line">
               Example: 24CY001 or ABHIRAJ KUMAR
             </div>
->>>>>>> f8ba98404503cf63ed5e8a07a29a533bfa02f661
             {status ? <div className="status-line">{status}</div> : null}
 
-            <div className="hero-actions" style={{ marginTop: "12px", display: "flex", gap: "10px" }}>
+            <div className="hero-actions" style={{ marginTop: '12px', display: 'flex', gap: '10px' }}>
               <button
                 className="ghost-btn"
                 type="button"
                 onClick={() => setShowUpload(!showUpload)}
               >
-                {showUpload ? "Close Upload" : "Upload Excel"}
+                {showUpload ? 'Close Upload' : 'Upload Excel'}
               </button>
             </div>
           </div>
@@ -335,7 +330,7 @@ function App({ user, onLogout }) {
                 <Doughnut
                   data={overallChartData}
                   options={{
-                    cutout: "72%",
+                    cutout: '72%',
                     plugins: { legend: { display: false } },
                   }}
                 />
@@ -361,14 +356,14 @@ function App({ user, onLogout }) {
               <div className="mini-line">
                 <Line
                   data={{
-                    labels: ["1", "2", "3", "4", "5", "6"],
+                    labels: ['1', '2', '3', '4', '5', '6'],
                     datasets: [
                       {
                         data: [
                           42, 56, 51, 67, 72, dashboard.overview.ai_readiness,
                         ],
-                        borderColor: "#8b5cf6",
-                        backgroundColor: "rgba(139, 92, 246, 0.16)",
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.16)',
                         tension: 0.35,
                         fill: true,
                         pointRadius: 0,
@@ -425,11 +420,11 @@ function App({ user, onLogout }) {
                 </button>
               </div>
               <div className="subject-list">
-                {subjectBadges.map((subjectName) => {
+                {subjectBadges.map((subjectName: string) => {
                   const subject =
                     dashboard.subject_scores.find(
-                      (item) => item.subject === subjectName,
-                    ) || { subject: subjectName, score: 0 };
+                      (item: any) => item.subject === subjectName
+                    ) || { subject: subjectName, score: 0 }
 
                   return (
                     <div className="subject-row" key={subject.subject}>
@@ -451,7 +446,7 @@ function App({ user, onLogout }) {
                       </div>
                       <div className="subject-score">{subject.score}%</div>
                     </div>
-                  );
+                  )
                 })}
               </div>
             </section>
@@ -476,12 +471,12 @@ function App({ user, onLogout }) {
                       y: {
                         beginAtZero: true,
                         max: 100,
-                        grid: { color: "rgba(148, 163, 184, 0.12)" },
-                        ticks: { color: "#94a3b8" },
+                        grid: { color: 'rgba(148, 163, 184, 0.12)' },
+                        ticks: { color: '#94a3b8' },
                       },
                       x: {
                         grid: { display: false },
-                        ticks: { color: "#94a3b8" },
+                        ticks: { color: '#94a3b8' },
                       },
                     },
                   }}
@@ -503,8 +498,8 @@ function App({ user, onLogout }) {
                   <h3>Today's Focus</h3>
                 </div>
                 <ul>
-                  {dashboard.today_focus.map((item) => (
-                    <li key={item}>
+                  {dashboard.today_focus.map((item: string, index: number) => (
+                    <li key={index}>
                       <span className="focus-bullet" />
                       <span>{item}</span>
                     </li>
@@ -521,8 +516,8 @@ function App({ user, onLogout }) {
                   <h3>Recommended For You</h3>
                 </div>
                 <ul>
-                  {dashboard.recommended_for_you.map((item) => (
-                    <li key={item}>
+                  {dashboard.recommended_for_you.map((item: string, index: number) => (
+                    <li key={index}>
                       <span className="rec-icon">⬢</span>
                       <span>{item}</span>
                     </li>
@@ -569,8 +564,8 @@ function App({ user, onLogout }) {
                 </button>
               </div>
               <div className="deadline-list">
-                {dashboard.upcoming_deadlines.map((item) => (
-                  <div className="deadline-item" key={item.title}>
+                {dashboard.upcoming_deadlines.map((item: any, index: number) => (
+                  <div className="deadline-item" key={index}>
                     <div className="deadline-icon">📅</div>
                     <div>
                       <div className="deadline-title">{item.title}</div>
@@ -592,8 +587,8 @@ function App({ user, onLogout }) {
                 </button>
               </div>
               <div className="achievement-list">
-                {dashboard.recent_achievements.map((item) => (
-                  <div className="achievement-item" key={item.title}>
+                {dashboard.recent_achievements.map((item: any, index: number) => (
+                  <div className="achievement-item" key={index}>
                     <span className="achievement-icon">⬤</span>
                     <div>
                       <div className="achievement-title">{item.title}</div>
@@ -607,7 +602,67 @@ function App({ user, onLogout }) {
         </section>
       </main>
     </div>
-  );
+  )
 }
 
-export default App;
+function App() {
+  const auth = useAuth()
+  const navigate = useNavigate()
+
+  const handleLoginSuccess = (userData: any) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      auth.login(userData, token)
+    }
+    navigate('/')
+  }
+
+  const handleLogout = () => {
+    auth.logout()
+    navigate('/login')
+  }
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          auth.isAuthenticated ? (
+            <Navigate to="/" replace />
+          ) : (
+            <Login
+              onLoginSuccess={handleLoginSuccess}
+              onSwitchToRegister={() => navigate('/register')}
+            />
+          )
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          auth.isAuthenticated ? (
+            <Navigate to="/" replace />
+          ) : (
+            <Register
+              onRegisterSuccess={handleLoginSuccess}
+              onSwitchToLogin={() => navigate('/login')}
+            />
+          )
+        }
+      />
+      <Route
+        path="/"
+        element={
+          auth.isAuthenticated ? (
+            <DashboardPage user={auth.user} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+export default App
