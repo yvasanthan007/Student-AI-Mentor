@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 import "../styles/Auth.css";
 
-export default function Login({ onLoginSuccess, onSwitchToRegister }) {
+export default function Login() {
+  const navigate = useNavigate();
   const [rollNumber, setRollNumber] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,11 +21,10 @@ export default function Login({ onLoginSuccess, onSwitchToRegister }) {
         password,
       });
 
-      // Store token and user info
       localStorage.setItem("token", response.data.access_token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      onLoginSuccess(response.data.user);
+      navigate("/", { replace: true });
     } catch (err) {
       const message =
         err.response?.data?.detail || "Login failed. Please try again.";
@@ -90,13 +91,9 @@ export default function Login({ onLoginSuccess, onSwitchToRegister }) {
           <div className="auth-footer">
             <p>
               New user?{" "}
-              <button
-                type="button"
-                className="link-btn"
-                onClick={onSwitchToRegister}
-              >
+              <Link to="/register" className="link-btn">
                 Sign Up Here
-              </button>
+              </Link>
             </p>
           </div>
         </div>
@@ -104,4 +101,3 @@ export default function Login({ onLoginSuccess, onSwitchToRegister }) {
     </div>
   );
 }
-

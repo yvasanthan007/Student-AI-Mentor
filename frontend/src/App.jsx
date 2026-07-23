@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArcElement,
   CategoryScale,
@@ -14,6 +15,11 @@ import api from "./services/api";
 
 import UploadExcel from "./components/UploadExcel";
 import Analysis from "./components/Analysis";
+import AIChat from "./components/AIChat";
+import Courses from "./components/Courses";
+import Assignments from "./components/Assignments";
+import Progress from "./components/Progress";
+import CareerAssistant from "./components/CareerAssistant";
 import "./App.css";
 
 ChartJS.register(
@@ -78,13 +84,29 @@ const defaultDashboard = {
   bottom_subjects: [],
 };
 
-function App({ user, onLogout }) {
-  const [query, setQuery] = useState(user?.username || "");
+function App() {
+  const navigate = useNavigate();
+  const [query, setQuery] = useState("");
   const [dashboard, setDashboard] = useState(defaultDashboard);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [latestUpload, setLatestUpload] = useState(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [activePage, setActivePage] = useState("dashboard");
+
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      return {};
+    }
+  }, []);
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login", { replace: true });
+  };
 
   const loadDashboard = async (search = "") => {
     setLoading(true);
@@ -165,7 +187,7 @@ function App({ user, onLogout }) {
     ? dashboard.top_subjects
     : ["PDS", "ADS", "DAA"];
 
-  const displayName = dashboard.student?.name || user?.name || "Student";
+  const displayName = dashboard.student?.name || user.name || "Student";
   const firstName = displayName.split(" ")[0];
   const performanceLabel =
     dashboard.overview.average_score >= 85
@@ -197,8 +219,25 @@ function App({ user, onLogout }) {
           {navItems.map((item) => (
             <button
               key={item.label}
-              className={`nav-item ${item.active ? "active" : ""}`}
+              className={`nav-item ${
+                item.label === "AI Chat" ? (activePage === "chat" ? "active" : "")
+                : item.label === "Courses" ? (activePage === "courses" ? "active" : "")
+                : item.label === "Assignments" ? (activePage === "assignments" ? "active" : "")
+                : item.label === "Progress" ? (activePage === "progress" ? "active" : "")
+                : item.label === "Career Assistant" ? (activePage === "career" ? "active" : "")
+                : (item.active && activePage === "dashboard" ? "active" : "")
+              }`}
               type="button"
+              onClick={() => {
+                const pageMap = {
+                  "AI Chat": "chat",
+                  Courses: "courses",
+                  Assignments: "assignments",
+                  Progress: "progress",
+                  "Career Assistant": "career",
+                };
+                setActivePage(pageMap[item.label] || "dashboard");
+              }}
             >
               <span className="nav-icon">{item.icon}</span>
               <span>{item.label}</span>
@@ -210,17 +249,37 @@ function App({ user, onLogout }) {
           <div className="avatar">{firstName.charAt(0)}</div>
           <div>
             <div className="profile-name">{displayName}</div>
-            <div className="profile-meta">3rd Year CSE</div>
-            <div className="profile-meta">v@college.edu</div>
+            <div className="profile-meta">{user.username || "Student"}</div>
           </div>
         </div>
 
-        <button className="logout-btn" type="button" onClick={onLogout}>
+        <button className="logout-btn" type="button" onClick={logout}>
           ↪ Logout
         </button>
       </aside>
 
-      <main className="workspace">
+      {activePage === "chat" ? (
+        <main className="workspace">
+          <AIChat user={user} />
+        </main>
+      ) : activePage === "courses" ? (
+        <main className="workspace">
+          <Courses dashboard={dashboard} />
+        </main>
+      ) : activePage === "assignments" ? (
+        <main className="workspace">
+          <Assignments dashboard={dashboard} />
+        </main>
+      ) : activePage === "progress" ? (
+        <main className="workspace">
+          <Progress dashboard={dashboard} />
+        </main>
+      ) : activePage === "career" ? (
+        <main className="workspace">
+          <CareerAssistant user={user} dashboard={dashboard} />
+        </main>
+      ) : (
+        <main className="workspace">
         <header className="topbar">
           <div>
             <h1>{dashboard.right_rail.greeting}</h1>
@@ -228,9 +287,7 @@ function App({ user, onLogout }) {
           </div>
 
           <div className="top-icons">
-            <div className="icon-btn badge">
-              🔔<span>3</span>
-            </div>
+            <div className="icon-btn badge">🔔<span>3</span></div>
             <div className="icon-btn">☼</div>
             <div className="icon-btn">⌄</div>
           </div>
@@ -561,6 +618,7 @@ function App({ user, onLogout }) {
           </aside>
         </section>
       </main>
+      )}
     </div>
   );
 }
