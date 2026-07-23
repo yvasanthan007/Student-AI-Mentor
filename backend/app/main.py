@@ -12,6 +12,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from app.api.auth import router as auth_router
+from app.api.chat import router as chat_router
 from app.api.dashboard import router as dashboard_router
 from app.api.mentor import router as mentor_router
 from app.api.upload import router as upload_router
@@ -40,6 +41,7 @@ app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(upload_router, prefix="/api", tags=["upload"])
 app.include_router(dashboard_router, prefix="/api", tags=["dashboard"])
 app.include_router(mentor_router, prefix="/api", tags=["mentor"])
+app.include_router(chat_router, prefix="/api", tags=["chat"])
 
 @app.get("/api")
 def root():

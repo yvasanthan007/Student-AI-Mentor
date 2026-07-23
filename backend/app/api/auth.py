@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
-
+ 
 from fastapi import APIRouter, Depends, HTTPException, status
 import bcrypt
 from sqlalchemy.orm import Session
@@ -33,19 +33,11 @@ def load_students_from_excel() -> dict[str, str]:
 
             if roll_no and name:
                 students[roll_no] = name
-<<<<<<< HEAD
-        
+
         print(f"[OK] Loaded {len(students)} students from Excel")
         return students
     except Exception as e:
         print(f"[ERROR] Error loading Excel file: {e}")
-=======
-
-        print(f"Loaded {len(students)} students from Excel")
-        return students
-    except Exception as e:
-        print(f"Error loading Excel file: {e}")
->>>>>>> f8ba98404503cf63ed5e8a07a29a533bfa02f661
         return {}
 
 
